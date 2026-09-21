@@ -11,4 +11,4 @@ NESTE.HE,Neste Oyj,78,Energy,position
 MBG.DE,Mercedes-Benz Group AG,42,Consumer Discretionary,position
 VALMT.HE,Valmet Oyj,73,Industrials,position
 ^VIX,CBOE Volatility Index,,,reference
-^V2TX,VSTOXX EURO STOXX 50 Volatility Index,,,reference
+^STOXX,STOXX Europe 600,,,reference
