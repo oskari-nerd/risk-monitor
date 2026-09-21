@@ -1,2 +1,8 @@
+from .db import connect
+from .positions import load_positions
+
 def main() -> None:
-    print("Hello from risk-monitor!")
+    conn = connect() 
+    load_positions(conn)
+    conn.close()
+
