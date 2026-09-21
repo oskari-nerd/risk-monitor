@@ -1,0 +1,14 @@
+ticker,name,shares,sector,role
+ORNBV.HE,Orion Oyj B,101,Healthcare,position
+ASML.AS,ASML Holding NV,5,Technology,position
+KESKOB.HE,Kesko Oyj B,319,Consumer Staples,position
+EUNL.DE,iShares Core MSCI World UCITS ETF,47,Fund,position
+NOKIA.HE,Nokia Oyj,470,Technology,position
+FORTUM.HE,Fortum Oyj,190,Utilities,position
+SAP.DE,SAP SE,18,Technology,position
+NDA-FI.HE,Nordea Bank Abp,171,Financials,position
+NESTE.HE,Neste Oyj,78,Energy,position
+MBG.DE,Mercedes-Benz Group AG,42,Consumer Discretionary,position
+VALMT.HE,Valmet Oyj,73,Industrials,position
+^VIX,CBOE Volatility Index,,,reference
+^STOXX,STOXX Europe 600,,,reference
