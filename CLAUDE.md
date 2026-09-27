@@ -18,7 +18,7 @@ Daily market-risk monitor for a small EUR-quoted paper portfolio, built in five
 layers, one branch and one commit set per layer:
 
 1. **Data** — `positions.csv` → `instruments`, yfinance closes → `prices`, SQLite, re-runnable ✓ merged 2026-09-21
-2. Returns and volatility — log returns, 20-day rolling vol, correlation matrix ← *next, branch `layer-2-returns`*
+2. Returns and volatility — log returns, 20-day rolling vol, correlation matrix ← *in progress, branch `layer-2-returns`*
 3. VaR — historical and parametric, 95% and 99%, one-day; headline 99%
 4. Limits and breach flags
 5. Backtest — exception counts, Basel traffic light
@@ -64,35 +64,30 @@ pandas + yfinance. Full spec and progress log: vault note `[[Portfolio Risk Moni
 
 *Update this at every session close.*
 
-**2026-09-21 (evening)** — **Layer 1 complete and merged to `main`.**
-`load_prices()` picks a window per ticker (730-day initial, 14-day overlap
-from `MAX(price_date)`, exclusive end = tomorrow), fetches, stores, collects
-tickers that return empty, prints and returns the list. `main()` calls it after
-`load_positions`. Verified: 12 tickers × ~500 rows from 2024-09-23; a second
-run added no rows (composite key + `DO NOTHING`); timed 4.5 s full vs 4.0 s
-incremental — round trips dominate, not row count, so incremental is not a
-speed win. `^V2TX` (VSTOXX) 404s on Yahoo, which carries no European vol
-index; replaced with `^STOXX` (STOXX Europe 600) as EUR market benchmark;
-`^VIX` stays. Database rebuilt by hand because the upsert never deletes.
-README written (by Claude — docs are Claude's, code is the author's). Commits
-`54b4dea` (prices), `3993562` (CSV), `8b23e35` (README), then `.gitignore` +
-`CLAUDE.md`, merged `--no-ff` to `main`. Issues: #1 (Layer 2 series alignment
-across exchange calendars), #2 (v2: VSTOXX from a second source).
+**2026-09-27** — **Layer 2 in progress on `layer-2-returns` (pushed).**
+`returns.py`: `load_price_table(conn)` reads `prices`, pivots to dates ×
+tickers, `dropna()`; `log_returns(prices)` = `np.log(prices / prices.shift(1))`
+then `dropna()`. Verified 515 → 479 aligned dates, returns 478 × 13, 0 NaN.
+**#1 decided:** keep only dates where every ticker has a close, before returns
+(forward-fill biases correlation down; proxying plants correlation = 1).
+Cost 36 dates, driven by Helsinki holidays (17 blanks each), not `^VIX` (13).
+README has a Layer 2 decisions section (Claude's). Commits `9cdd836`,
+`f89562f`. #1 closes on merge to `main`.
 
-Author wrote all code from skeletons; recurring slips were `=` on a function
-call, `str - int` before `fromisoformat`, and `return` indented inside an
-`if`. Vim was a hazard: use `-m` flags for commits.
+13 tickers: 11 positions (7 Helsinki, 3 Xetra, 1 Amsterdam) + `^VIX`,
+`^STOXX`. The old "12 tickers" figure was wrong.
 
-**Open, not blocking:** a ticker removed from the CSV persists in
-`instruments` (upsert never deletes; FK consequence for its prices rows);
-yfinance's own 404 logging is noise next to the loader's report — silence via
-`logging` when convenient; a delisting is currently indistinguishable from a
+Author wrote both functions from skeletons with blanks. Slips: thought the
+query was `db.ticker`, thought `dropna` was SQL, first commit bodies had a
+vague "because". **No `Co-Authored-By` trailers, ever** (author's rule).
+
+**Open, not blocking:** `EUNL.DE` 12 blanks vs 10 for SAP/MBG on the same
+exchange; VALMT.HE +0.11 on 2024-09-25 and SAP.DE 0.0 on 2024-09-24 to check
+before historical VaR; a ticker removed from the CSV persists in
+`instruments`; yfinance 404 logging noise; delisting indistinguishable from a
 failed download.
 
-**Next:** Layer 2 on a new branch from `main` (`layer-2-returns`). Start with
-a `returns.py` that reads `prices` into a pandas DataFrame (dates × tickers),
-decide the alignment rule from #1 *before* computing anything, then log
-returns → 20-day rolling vol → annualisation → correlation matrix → portfolio
-vol from weights and covariance. Scaffold each as a new subject: pandas
-pivot/`pct_change`/`rolling` are unchecked Study Plan concepts. Follow the
+**Next:** 20-day rolling vol — `rolling(20).std()` is new syntax, scaffold it
+on a separate example first. Then annualise (√252) → correlation matrix →
+portfolio vol from weights (shares × latest close) and covariance. Follow the
 teaching rules above: explain first; never give ready-to-paste project code.
