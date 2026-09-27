@@ -74,6 +74,12 @@ Cost 36 dates, driven by Helsinki holidays (17 blanks each), not `^VIX` (13).
 README has a Layer 2 decisions section (Claude's). Commits `9cdd836`,
 `f89562f`. #1 closes on merge to `main`.
 
+**Resolved:** VALMT.HE +0.110 on 2024-09-25 (22.92 → 25.60) is real — a
+large order announcement that day (author's information, not checked against a
+second source); `^STOXX` was −0.0011, so it is stock-specific. Keep it: the
+kind of day historical VaR must include and parametric VaR underweights —
+use it when comparing the two in Layer 3.
+
 13 tickers: 11 positions (7 Helsinki, 3 Xetra, 1 Amsterdam) + `^VIX`,
 `^STOXX`. The old "12 tickers" figure was wrong.
 
@@ -82,8 +88,7 @@ query was `db.ticker`, thought `dropna` was SQL, first commit bodies had a
 vague "because". **No `Co-Authored-By` trailers, ever** (author's rule).
 
 **Open, not blocking:** `EUNL.DE` 12 blanks vs 10 for SAP/MBG on the same
-exchange; VALMT.HE +0.11 on 2024-09-25 and SAP.DE 0.0 on 2024-09-24 to check
-before historical VaR; a ticker removed from the CSV persists in
+exchange; SAP.DE exactly 0.0 on 2024-09-24 (real or stale?); a ticker removed from the CSV persists in
 `instruments`; yfinance 404 logging noise; delisting indistinguishable from a
 failed download.
 
