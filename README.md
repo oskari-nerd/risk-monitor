@@ -10,7 +10,7 @@ Built in five layers, each on its own branch with its own commits:
 | Layer | What | Status |
 |---|---|---|
 | 1 | Data — positions and daily closes into SQLite, re-runnable | done |
-| 2 | Returns and volatility — log returns, 20-day rolling vol, correlation | next |
+| 2 | Returns and volatility — log returns, 20-day rolling vol, correlation | in progress |
 | 3 | VaR — historical and parametric, 95% and 99%, one-day | |
 | 4 | Limits — a limits table, daily check, breach flags | |
 | 5 | Backtest — exception counts, Basel traffic light | |
@@ -63,7 +63,7 @@ connection with `IF NOT EXISTS`, so there is no separate setup step.
 - **An empty fetch does not stop the run.** The ticker is collected, the
   others still load, and the list is printed and returned at the end.
 - **Incremental fetch is not a speed win.** Measured 4.5 s for the full
-  two-year load of 12 tickers against 4.0 s for the incremental run: the
+  two-year load of 13 tickers against 4.0 s for the incremental run: the
   time is 13 HTTP round trips, not row count. The incremental branch saves
   transfer and inserts, not seconds.
 - **`value REAL`, not integer cents.** These are measurements consumed as
@@ -92,6 +92,36 @@ VSTOXX or any other European volatility index, so `^VIX` is the only
 implied-vol reference in v1 — a US number next to a EUR portfolio.
 `^STOXX` (STOXX Europe 600) is the market benchmark. VSTOXX from a second
 source is a v2 item — [#2](https://github.com/oskari-nerd/risk-monitor/issues/2).
+
+## Layer 2 — returns and volatility
+
+`load_price_table` reads `prices` and pivots it into one row per date and one
+column per ticker. A date on which any exchange was closed leaves a blank in
+that ticker's column.
+
+### Decisions
+
+- **Series are aligned on common dates: a date is kept only if every ticker
+  has a close.** Correlation and portfolio volatility compare same-day moves,
+  so each row must be the same day for every asset. Rows with a blank are
+  dropped *before* returns are computed, so the return after a dropped date
+  spans two days for every ticker alike.
+- **Not forward-fill.** Copying the last close into a holiday creates a 0%
+  return for the closed market next to a real move in the open one, and pushes
+  the move into the next day. Both days lose their co-movement, so correlation
+  is biased down, diversification looks larger than it is, and portfolio vol
+  and parametric VaR understate risk.
+- **Not proxying from a correlated asset.** Filling a gap with another
+  ticker's move puts a perfect co-movement into the data, so correlation
+  would partly measure the filling rule. Proxying is for instruments with no
+  history at all; here only a few days are missing.
+- **Cost, measured 2026-09-27:** 515 dates on which any ticker traded, 479
+  with every ticker present, so 36 dates (7%) are dropped over two years.
+  Blanks per ticker: Helsinki 17 each, `^STOXX` 17, `^VIX` 13, Xetra 10–12,
+  Amsterdam 6. Helsinki drives the loss, not the US calendar: Finnish holidays
+  (Epiphany, Ascension, Midsummer Eve, Independence Day, Christmas Eve) close
+  7 of the 11 positions while Xetra and Amsterdam trade. Closes
+  [#1](https://github.com/oskari-nerd/risk-monitor/issues/1) once implemented.
 
 ## Not in v1
 
