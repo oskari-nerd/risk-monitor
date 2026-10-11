@@ -54,6 +54,8 @@ pandas + yfinance. Full spec and progress log: vault note `[[Portfolio Risk Moni
 - **Nudge in context.** Tie work back to the Study Plan and the Market Risk track.
 - **Record the why the day it is decided** — commit bodies, README design
   decisions, the vault progress note.
+- **Commits:** Claude writes the message as a ready `git commit -m … -m …`
+  command; the author runs it. Claude never runs `git commit` itself.
 - Concise and direct; minimal preamble. No scheduled or automated tasks.
 
 ## Session open / close
@@ -64,15 +66,35 @@ pandas + yfinance. Full spec and progress log: vault note `[[Portfolio Risk Moni
 
 *Update this at every session close.*
 
-**2026-09-27** — **Layer 2 in progress on `layer-2-returns` (pushed).**
-`returns.py`: `load_price_table(conn)` reads `prices`, pivots to dates ×
-tickers, `dropna()`; `log_returns(prices)` = `np.log(prices / prices.shift(1))`
-then `dropna()`. Verified 515 → 479 aligned dates, returns 478 × 13, 0 NaN.
+**2026-10-11** — **Layer 2: vol, annualising and correlation done;
+portfolio vol explained, not started.** Commits `f00bdd1` (`rolling_vol`),
+`32ba096` (`annualise_vol` = `daily_vol * np.sqrt(periods)`, default 252),
+`b0ac51f` (`correlation_matrix` = `returns.corr()`), **not pushed**. README
+bullets for annualising and correlation are uncommitted, with this file.
+Verified: rolling vol matches a NumPy recomputation of every window; annual ÷
+daily = √252 in every cell; correlation matches `np.corrcoef`, 78 pairs.
+**Prediction confirmed:** Nokia–ASML 0.34 > Nokia–Kesko 0.04. Average pairwise
+correlation among the 11 positions 0.17; `^VIX` −0.37 to −0.02 against every
+position (understated: VIX closes in New York hours after Europe). Correlating
+prices instead would give Nokia–ASML 0.89.
+
+`n − 1` re-quiz passed (window 5 → 4 NaN days). The author declined quizzes
+and sabotage this session ("I just want to build") after 11 days away: keep
+to explanations and prediction-before-check; sabotage stays optional.
+Concepts held; Python mechanics were rusty. Slips: parameter named
+`rolling_vol` (shadowing again); unsure how a result gets into a function
+(call-site binding: `annualise_vol(vol)` puts `vol` into `daily_vol`);
+`annualise_vol * np.rolling_vol(periods)`; `returns.pd.dataframe()` →
+`returns.dataframe()` → `returns.corr.dataframe()`, because Claude's table said
+"returns: DataFrame" and the author read it as a conversion step. Say "already gives
+a DataFrame" next time. Claude committed `f00bdd1` itself, against the
+agreement; the author kept it, and the rule is now under *How sessions work*.
+
+**2026-09-27** — `load_price_table` (515 → 479 aligned dates) and
+`log_returns` (478 × 13, 0 NaN) done, commits `9cdd836`, `f89562f`, pushed.
 **#1 decided:** keep only dates where every ticker has a close, before returns
 (forward-fill biases correlation down; proxying plants correlation = 1).
-Cost 36 dates, driven by Helsinki holidays (17 blanks each), not `^VIX` (13).
-README has a Layer 2 decisions section (Claude's). Commits `9cdd836`,
-`f89562f`. #1 closes on merge to `main`.
+Cost 36 dates, driven by Helsinki holidays. #1 closes on merge to `main`.
 
 **Resolved:** VALMT.HE +0.110 on 2024-09-25 (22.92 → 25.60) is real — a
 large order announcement that day (author's information, not checked against a
@@ -89,10 +111,18 @@ vague "because". **No `Co-Authored-By` trailers, ever** (author's rule).
 
 **Open, not blocking:** `EUNL.DE` 12 blanks vs 10 for SAP/MBG on the same
 exchange; SAP.DE exactly 0.0 on 2024-09-24 (real or stale?); a ticker removed from the CSV persists in
-`instruments`; yfinance 404 logging noise; delisting indistinguishable from a
+`instruments` (now matters: a sold position would keep its weight); yfinance 404 logging noise; delisting indistinguishable from a
 failed download.
 
-**Next:** 20-day rolling vol — `rolling(20).std()` is new syntax, scaffold it
-on a separate example first. Then annualise (√252) → correlation matrix →
-portfolio vol from weights (shares × latest close) and covariance. Follow the
-teaching rules above: explain first; never give ready-to-paste project code.
+**Data length:** prices end 2026-09-21; 478 returns, but Layer 5 needs 500
+(250 lookback + 250 backtest). Re-run the Layer 1 load before Layer 5.
+
+**Next:** push. Then portfolio vol in three functions, explained 2026-10-11:
+`load_shares(conn)` in `positions.py` (`SELECT ticker, shares FROM instruments
+WHERE role = 'position'`, `pd.read_sql(..., index_col="ticker")["shares"]`,
+taught on a `books` example) → `position_weights(shares, prices)` (shares ×
+`prices.iloc[-1]` for the positions, ÷ total) → `portfolio_vol(returns,
+weights)` (`.cov()` on the positions, `w @ cov @ w`, √). `@` aligns on ticker
+labels and raises "matrices are not aligned" if the sets differ. Then test the
+other prediction: ASML 28–35% of risk (row of the grid ÷ total). Explain
+first; never give ready-to-paste project code.
