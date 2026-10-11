@@ -128,6 +128,23 @@ that ticker's column.
   so vol has the same 478 dates as the returns and the two tables line up row
   for row. Checked 2026-10-11 against a plain NumPy recomputation of every
   window.
+- **Annualising is a separate step.** `annualise_vol` multiplies daily vol by
+  √252, the square-root-of-time rule: variances of independent daily log
+  returns add, so vol grows with the square root of the number of days. It is
+  kept apart from `rolling_vol` because the one-day VaR in Layer 3 needs the
+  daily figure; the annual one is for reading and comparison. 252 trading days
+  is a convention, and the rule assumes independent returns with constant vol,
+  which volatility clustering breaks.
+- **Correlation is computed on log returns, over whatever the caller passes.**
+  `correlation_matrix` is pandas' Pearson `.corr()`. The function does not
+  pick the window or the tickers: for now all 478 dates and all 13 tickers go
+  in; the portfolio-vol step selects the 11 positions, and a shorter window is
+  a slice before the call. Returns, not prices: two trending price series
+  correlate through the trend alone (on prices Nokia–ASML is 0.89, on returns
+  0.34). Measured 2026-10-11: average pairwise correlation among the 11
+  positions 0.17; `^VIX` is negative against every position (−0.37 to −0.02),
+  though weaker than its true link because it closes in New York hours after
+  the European markets.
 
 ## Not in v1
 
