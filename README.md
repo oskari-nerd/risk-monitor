@@ -122,6 +122,12 @@ that ticker's column.
   (Epiphany, Ascension, Midsummer Eve, Independence Day, Christmas Eve) close
   7 of the 11 positions while Xetra and Amsterdam trade. Closes
   [#1](https://github.com/oskari-nerd/risk-monitor/issues/1) once implemented.
+- **Rolling vol keeps its leading NaN rows.** `rolling_vol` is the sample
+  standard deviation (pandas `ddof=1`) of the last 20 daily log returns. The
+  first 19 dates have no full window and stay NaN rather than being dropped,
+  so vol has the same 478 dates as the returns and the two tables line up row
+  for row. Checked 2026-10-11 against a plain NumPy recomputation of every
+  window.
 
 ## Not in v1
 

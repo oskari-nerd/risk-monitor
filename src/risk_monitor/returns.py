@@ -11,3 +11,6 @@ def log_returns(prices):
     ratio = prices / prices.shift(1)
     logged = np.log(ratio)
     return logged.dropna()
+
+def rolling_vol(returns, window=20):
+    return returns.rolling(window).std()
