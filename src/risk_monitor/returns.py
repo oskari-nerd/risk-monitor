@@ -14,3 +14,6 @@ def log_returns(prices):
 
 def rolling_vol(returns, window=20):
     return returns.rolling(window).std()
+
+def annualise_vol(daily_vol, periods=252):
+    return daily_vol * np.sqrt(periods)
