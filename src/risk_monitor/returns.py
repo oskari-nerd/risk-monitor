@@ -17,3 +17,6 @@ def rolling_vol(returns, window=20):
 
 def annualise_vol(daily_vol, periods=252):
     return daily_vol * np.sqrt(periods)
+
+def correlation_matrix(returns):
+    return returns.corr()
